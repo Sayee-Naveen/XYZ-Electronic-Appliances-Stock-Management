@@ -1,0 +1,162 @@
+[
+  {
+    "id": "e6144d06",
+    "timestamp": "20-Nov-2026 04:24:26 PM",
+    "user_name": "Admin1",
+    "user_role": "Administrator",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Admin1 (Administrator) logged in successfully."
+  },
+  {
+    "id": "2aa088c6",
+    "timestamp": "20-Nov-2026 04:18:40 PM",
+    "user_name": "Admin1",
+    "user_role": "Administrator",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Admin1 (Administrator) logged in successfully."
+  },
+  {
+    "id": "8764cc40",
+    "timestamp": "20-Nov-2026 04:13:57 PM",
+    "user_name": "Godown Staff",
+    "user_role": "Godown Staff",
+    "action": "STOCK_ADJUSTMENT",
+    "sku": "XYZ-AC-301",
+    "product_name": "Daikin 1.5 Ton 5-Star Inverter Split Air Conditioner",
+    "details": "Stock adjusted by +1 (Reason: Quick Restock (+1)). New stock: 17 units."
+  },
+  {
+    "id": "dea80f8c",
+    "timestamp": "20-Nov-2026 04:13:53 PM",
+    "user_name": "Godown Staff",
+    "user_role": "Godown Staff",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Godown Staff (Godown Staff) logged in successfully."
+  },
+  {
+    "id": "5622af8d",
+    "timestamp": "20-Nov-2026 04:05:53 PM",
+    "user_name": "Store Manager",
+    "user_role": "Store Manager",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Store Manager (Store Manager) logged in successfully."
+  },
+  {
+    "id": "5f390eeb",
+    "timestamp": "20-Nov-2026 04:02:51 PM",
+    "user_name": "Admin1",
+    "user_role": "Administrator",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Admin1 (Administrator) logged in successfully."
+  },
+  {
+    "id": "1eb9b672",
+    "timestamp": "20-Nov-2026 03:57:21 PM",
+    "user_name": "Admin1",
+    "user_role": "Administrator",
+    "action": "STOCK_ADJUSTMENT",
+    "sku": "XYZ-TV-001",
+    "product_name": "Sony Bravia 65-Inch 4K Ultra HD Smart LED TV",
+    "details": "Stock adjusted by -1 (Reason: Revert test). New stock: 18 units."
+  },
+  {
+    "id": "47d96a5d",
+    "timestamp": "20-Nov-2026 03:57:21 PM",
+    "user_name": "Godown Staff",
+    "user_role": "Godown Staff",
+    "action": "STOCK_ADJUSTMENT",
+    "sku": "XYZ-TV-001",
+    "product_name": "Sony Bravia 65-Inch 4K Ultra HD Smart LED TV",
+    "details": "Stock adjusted by +1 (Reason: Godown Incoming Shipment). New stock: 19 units."
+  },
+  {
+    "id": "d0581cd2",
+    "timestamp": "20-Nov-2026 03:57:21 PM",
+    "user_name": "Godown Staff",
+    "user_role": "Godown Staff",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Godown Staff (Godown Staff) logged in successfully."
+  },
+  {
+    "id": "2f9031f3",
+    "timestamp": "20-Nov-2026 03:57:21 PM",
+    "user_name": "Store Manager",
+    "user_role": "Store Manager",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Store Manager (Store Manager) logged in successfully."
+  },
+  {
+    "id": "9909e3ac",
+    "timestamp": "20-Nov-2026 03:57:21 PM",
+    "user_name": "Admin1",
+    "user_role": "Administrator",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Admin1 (Administrator) logged in successfully."
+  },
+  {
+    "id": "ac63103c",
+    "timestamp": "20-Nov-2026 03:46:09 PM",
+    "user_name": "Stock Auditor",
+    "user_role": "Store Auditor",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Stock Auditor logged in successfully."
+  },
+  {
+    "id": "1ab3ce9f",
+    "timestamp": "20-Nov-2026 03:46:09 PM",
+    "user_name": "Inventory Manager",
+    "user_role": "Inventory Manager",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User Inventory Manager logged in successfully."
+  },
+  {
+    "id": "bb7a45cd",
+    "timestamp": "20-Nov-2026 03:46:09 PM",
+    "user_name": "System Administrator",
+    "user_role": "Administrator",
+    "action": "USER_LOGIN",
+    "sku": "AUTH",
+    "product_name": "System Access",
+    "details": "User System Administrator logged in successfully."
+  },
+  {
+    "id": "c567e026",
+    "timestamp": "20-Nov-2026 03:44:55 PM",
+    "user_name": "Test Runner",
+    "user_role": "Admin",
+    "action": "TEST_ACTION",
+    "sku": "XYZ-TV-001",
+    "product_name": "Sony Bravia 65-Inch 4K Ultra HD Smart LED TV",
+    "details": "Automated test adjustment"
+  },
+  {
+    "id": "init001",
+    "timestamp": "20-Nov-2026 10:00:00 AM",
+    "user_name": "System Administrator",
+    "user_role": "Administrator",
+    "action": "EXCEL_SYNC",
+    "sku": "SYSTEM",
+    "product_name": "XYZ_Stock_Inventory.xlsx",
+    "details": "Initial stock database loaded and verified (22 appliance models active)."
+  }
+]

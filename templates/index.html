@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XYZ Electronic Appliances - Stock Management Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        [x-cloak] { display: none !important; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        /* Print Styling & Clean Multi-Page Pagination */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 15mm 10mm;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { 
+                background: white !important; 
+                color: #0f172a !important; 
+                overflow: visible !important;
+                font-size: 11px !important;
+            }
+            
+            /* Table pagination rules */
+            table { 
+                width: 100% !important; 
+                border-collapse: collapse !important; 
+                page-break-inside: auto !important;
+            }
+            thead { 
+                display: table-header-group !important; /* Repeats table header on every page */
+            }
+            tfoot {
+                display: table-footer-group !important;
+            }
+            tr { 
+                page-break-inside: avoid !important; 
+                break-inside: avoid !important;
+            }
+            th, td { 
+                border: 1px solid #cbd5e1 !important; 
+                padding: 6px 8px !important; 
+                font-size: 10px !important; 
+            }
+
+            /* Dedicated Reorder Sheet Print Layout */
+            body.printing-reorder #appView,
+            body.printing-reorder #loginView,
+            body.printing-reorder #editModal,
+            body.printing-reorder #addModal,
+            body.printing-reorder #barcodeModal,
+            body.printing-reorder #uploadModal,
+            body.printing-reorder #auditDrawer,
+            body.printing-reorder #toastContainer {
+                display: none !important;
+            }
+
+            body.printing-reorder #reorderModal {
+                position: static !important;
+                display: block !important;
+                background: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                inset: auto !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+
+            body.printing-reorder #reorderModal > div {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+
+            body.printing-reorder #reorderModal .max-h-96 {
+                max-height: none !important;
+                overflow: visible !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+            body.printing-reorder .reorder-print-header {
+                display: block !important;
+            }
+
+            body.printing-reorder .reorder-modal-close,
+            body.printing-reorder .reorder-modal-actions {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- 1. LOGIN SCREEN (shown if not logged in)   -->
+    <!-- ========================================== -->
+    <div id="loginView" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+        <div class="w-full max-w-lg bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <!-- Decorative accent glow -->
+            <div class="absolute -top-24 -right-24 w-60 h-60 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-60 h-60 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Header & Logo -->
+            <div class="text-center mb-8 relative z-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30 mb-3">
+                    <i class="fa-solid fa-boxes-stacked text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">XYZ Electronic Appliances</h1>
+                <p class="text-xs text-blue-300 uppercase tracking-widest mt-1 font-semibold">Enterprise Stock & Inventory System</p>
+                <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs">
+                    <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                    <span>Connected to: <strong>XYZ_Stock_Inventory.xlsx</strong></span>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4 relative z-10" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Official Corporate Email</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-regular fa-envelope"></i>
+                        </span>
+                        <input type="email" id="loginEmail" required 
+                            value="admin@xyzappliances.com"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition"
+                            placeholder="name@xyzappliances.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="loginPassword" required 
+                            value="admin123"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" id="loginSubmitBtn"
+                    class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 hover:from-blue-500 to-indigo-600 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition transform active:scale-[0.98] text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Sign In to Inventory Portal</span>
+                </button>
+            </form>
+
+            <!-- Interview / Quick 1-Click Demo Login Pills -->
+            <div class="mt-6 pt-5 border-t border-slate-700/60 relative z-10">
+                <p class="text-xs text-center text-slate-400 font-medium mb-3">
+                    <i class="fa-solid fa-key text-amber-400 mr-1"></i> Quick 1-Click Interview Demo Logins:
+                </p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="quickFillLogin('admin@xyzappliances.com', 'admin123')"
+                        class="p-2 rounded-xl bg-slate-900/90 hover:bg-blue-900/40 border border-slate-700 hover:border-blue-500/50 text-left transition group">
+                        <div class="text-[11px] font-semibold text-blue-300 group-hover:text-blue-200">👑 Admin1</div>
+                        <div class="text-[10px] text-slate-400 truncate">Full System Admin</div>
+                    </button>
+                    <button type="button" onclick="quickFillLogin('manager@xyzappliances.com', 'manager123')"
+                        class="p-2 rounded-xl bg-slate-900/90 hover:bg-emerald-900/40 border border-slate-700 hover:border-emerald-500/50 text-left transition group">
+                        <div class="text-[11px] font-semibold text-emerald-300 group-hover:text-emerald-200">🏬 Store Manager</div>
+                        <div class="text-[10px] text-slate-400 truncate">Stock & Reorder PO</div>
+                    </button>
+                    <button type="button" onclick="quickFillLogin('godown@xyzappliances.com', 'godown123')"
+                        class="p-2 rounded-xl bg-slate-900/90 hover:bg-amber-900/40 border border-slate-700 hover:border-amber-500/50 text-left transition group">
+                        <div class="text-[11px] font-semibold text-amber-300 group-hover:text-amber-200">📦 Godown Staff</div>
+                        <div class="text-[10px] text-slate-400 truncate">Adjust & Barcodes</div>
+                    </button>
+                </div>
+                <div class="mt-3 text-center text-[11px] text-slate-500">
+                    Live bidirectional sync with <span id="loginExcelPath" class="text-blue-300 font-mono">data/XYZ_Stock_Inventory.xlsx</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN APPLICATION DASHBOARD VIEW         -->
+    <!-- ========================================== -->
+    <div id="appView" class="hidden min-h-screen flex flex-col">
+        
+        <!-- Top Navbar -->
+        <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                
+                <!-- Brand Title & Excel Status Pill -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                        <i class="fa-solid fa-boxes-stacked text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight">XYZ APPLIANCES</span>
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">StockOS v2.4</span>
+                        </div>
+                        <!-- Live Excel File connection badge -->
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Connected:
+                            </span>
+                            <span id="navExcelFilename" class="font-mono text-[11px] text-slate-700 dark:text-slate-300">XYZ_Stock_Inventory.xlsx</span>
+                            <span id="navExcelInfo" class="text-[10px] text-slate-400 hidden sm:inline">(14.8 KB)</span>
+                            <button onclick="refreshData(true)" title="Force sync with Excel on disk" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-[11px] flex items-center gap-1 font-semibold ml-1">
+                                <i id="syncIcon" class="fa-solid fa-arrows-rotate"></i> Sync Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons & User Profile -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    
+                    <!-- Download Excel button -->
+                    <a href="/api/download-excel" download 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/70 text-xs font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i>
+                        <span class="hidden md:inline">Download Excel</span>
+                    </a>
+
+                    <!-- Upload Excel button -->
+                    <button id="navUploadBtn" onclick="openUploadModal()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-file-arrow-up text-blue-500"></i>
+                        <span class="hidden md:inline">Upload Excel</span>
+                    </button>
+
+                    <!-- Add New Appliance Button -->
+                    <button id="navAddBtn" onclick="openAddModal()" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add Appliance</span>
+                    </button>
+
+                    <!-- Smart Reorder PO Generator -->
+                    <button id="navPoBtn" onclick="openReorderModal()" title="View low stock and generate Purchase Order"
+                        class="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200 hover:bg-amber-100 text-xs font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-truck-ramp-box text-amber-500"></i>
+                        <span class="hidden lg:inline">Reorder PO</span>
+                        <span id="reorderBadge" class="hidden px-1.5 py-0.2 rounded-full bg-red-600 text-white text-[10px] font-bold">0</span>
+                    </button>
+
+                    <!-- Audit Trail Drawer Button -->
+                    <button onclick="toggleAuditDrawer()" title="View stock edit history / audit logs"
+                        class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </button>
+
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <div class="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                    <!-- User Pill & Logout -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-sm flex items-center justify-center font-bold" id="userAvatar">
+                            👨‍💼
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <div class="text-xs font-bold leading-tight" id="userName">System Administrator</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400" id="userRole">Administrator</div>
+                        </div>
+                        <button onclick="handleLogout()" title="Sign Out" class="p-1.5 text-slate-400 hover:text-red-500 transition ml-1">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Content -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+            <!-- Role Permission Indicator Banner -->
+            <div id="userPermissionBanner" class="hidden text-xs text-center py-2 px-4 rounded-xl shadow-xs transition no-print"></div>
+
+            <!-- ========================================== -->
+            <!-- 2.1 KPI CARDS SUMMARY SECTION              -->
+            <!-- ========================================== -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+                <!-- Total Valuation -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                        <span class="text-xs font-semibold">Total Inventory Value</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white" id="kpiRetailVal">₹0</div>
+                    <div class="flex items-center justify-between mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                        <span>Cost: <span id="kpiCostVal" class="font-medium">₹0</span></span>
+                        <span id="kpiMarginBadge" class="font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded">+0% Margin</span>
+                    </div>
+                </div>
+
+                <!-- Total Stock Volume -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                        <span class="text-xs font-semibold">Appliances In Stock</span>
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white" id="kpiTotalUnits">0 Units</div>
+                    <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                        Across <span id="kpiTotalSkus" class="font-bold text-slate-700 dark:text-slate-200">0</span> distinct appliance SKUs
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                        <span class="text-xs font-semibold">Low Stock Items</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400" id="kpiLowStock">0</div>
+                    <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <span>Below min threshold</span>
+                        <button onclick="setFilterStatus('Low Stock')" class="text-amber-600 font-semibold hover:underline">View &rarr;</button>
+                    </div>
+                </div>
+
+                <!-- Out of Stock Critical -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                        <span class="text-xs font-semibold">Out of Stock</span>
+                        <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-red-600 dark:text-red-400" id="kpiOutOfStock">0</div>
+                    <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <span>Zero inventory level</span>
+                        <button onclick="setFilterStatus('Out of Stock')" class="text-red-600 font-semibold hover:underline">Reorder &rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.2 TOGGLEABLE ANALYTICS / CHARTS PANEL    -->
+            <!-- ========================================== -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm no-print">
+                <button onclick="toggleAnalytics()" class="w-full px-5 py-3.5 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Executive Category & Brand Visual Insights</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-semibold">Interactive Charts</span>
+                    </div>
+                    <i id="analyticsChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                </button>
+                <div id="analyticsPanel" class="p-5 hidden border-t border-slate-200 dark:border-slate-800">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Category Distribution -->
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                            <h3 class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-indigo-500"></i> Stock Breakdown by Appliance Category
+                            </h3>
+                            <div class="relative h-64 flex items-center justify-center">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        <!-- Brand Distribution -->
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                            <h3 class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-tag text-emerald-500"></i> Stock Quantity by Manufacturer / Brand
+                            </h3>
+                            <div class="relative h-64 flex items-center justify-center">
+                                <canvas id="brandChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.3 CONTROLS & FILTER BAR                  -->
+            <!-- ========================================== -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3 no-print">
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                    
+                    <!-- Search Input -->
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="searchInput" oninput="debounceSearch()"
+                            placeholder="Search by appliance name, SKU, model number (e.g. Sony 65, RT28C, XYZ-TV)..."
+                            class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Category & Brand Filters -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="categoryFilter" onchange="applyFilters()"
+                            class="py-2 px-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="All">All Categories</option>
+                            <option value="Televisions">Televisions</option>
+                            <option value="Refrigerators">Refrigerators</option>
+                            <option value="Washing Machines">Washing Machines</option>
+                            <option value="Air Conditioners">Air Conditioners</option>
+                            <option value="Kitchen Appliances">Kitchen Appliances</option>
+                            <option value="Home Cleaning">Home Cleaning</option>
+                        </select>
+
+                        <select id="brandFilter" onchange="applyFilters()"
+                            class="py-2 px-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="All">All Brands</option>
+                            <option value="Sony">Sony</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="LG">LG</option>
+                            <option value="Daikin">Daikin</option>
+                            <option value="Whirlpool">Whirlpool</option>
+                            <option value="Bosch">Bosch</option>
+                            <option value="Philips">Philips</option>
+                            <option value="Dyson">Dyson</option>
+                            <option value="Haier">Haier</option>
+                            <option value="Prestige">Prestige</option>
+                        </select>
+
+                        <select id="sortBy" onchange="applyFilters()"
+                            class="py-2 px-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="sku-asc">Sort: SKU (A-Z)</option>
+                            <option value="name-asc">Sort: Product Name</option>
+                            <option value="stock-asc">Sort: Stock (Low to High)</option>
+                            <option value="stock-desc">Sort: Stock (High to Low)</option>
+                            <option value="price-desc">Sort: Price (High to Low)</option>
+                            <option value="price-asc">Sort: Price (Low to High)</option>
+                        </select>
+
+                        <button onclick="window.print()" title="Print inventory audit sheet"
+                            class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition text-xs flex items-center gap-1 font-semibold">
+                            <i class="fa-solid fa-print"></i>
+                            <span class="hidden sm:inline">Print Sheet</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Status Filter Pills -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+                    <span class="text-slate-400 font-medium text-[11px] mr-1">Status:</span>
+                    <button onclick="setFilterStatus('All')" id="pillStatusAll" 
+                        class="px-2.5 py-1 rounded-lg font-semibold bg-blue-600 text-white transition">All Items (<span id="countAll">0</span>)</button>
+                    <button onclick="setFilterStatus('In Stock')" id="pillStatusInStock" 
+                        class="px-2.5 py-1 rounded-lg font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition">Healthy In Stock (<span id="countInStock">0</span>)</button>
+                    <button onclick="setFilterStatus('Low Stock')" id="pillStatusLowStock" 
+                        class="px-2.5 py-1 rounded-lg font-semibold bg-slate-100 dark:bg-slate-800 text-amber-600 hover:bg-amber-50 transition">⚠️ Low Stock (<span id="countLowStock">0</span>)</button>
+                    <button onclick="setFilterStatus('Out of Stock')" id="pillStatusOutOfStock" 
+                        class="px-2.5 py-1 rounded-lg font-semibold bg-slate-100 dark:bg-slate-800 text-red-600 hover:bg-red-50 transition">🚨 Out of Stock (<span id="countOutOfStock">0</span>)</button>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.4 LIVE STOCK TABLE                       -->
+            <!-- ========================================== -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                                <th class="py-3 px-4">SKU / Model</th>
+                                <th class="py-3 px-4">Appliance Name & Specs</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4">Location</th>
+                                <th class="py-3 px-4 text-center">Current Stock</th>
+                                <th class="py-3 px-4 text-center">Quick Adjust</th>
+                                <th class="py-3 px-4 text-right">Pricing (₹)</th>
+                                <th class="py-3 px-4 text-center">Status</th>
+                                <th class="py-3 px-4 text-center no-print">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
+                            <!-- Injected dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden py-16 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-2xl mb-3">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">No appliances match your criteria</h3>
+                    <p class="text-xs text-slate-400 mt-1">Try clearing your filters or search term to see more items.</p>
+                    <button onclick="clearAllFilters()" class="mt-3 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Clear Filters</button>
+                </div>
+
+                <!-- Table Footer / Count -->
+                <div class="py-3 px-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex items-center justify-between text-xs text-slate-500 no-print">
+                    <div>
+                        Showing <span id="visibleCount" class="font-bold text-slate-800 dark:text-slate-200">0</span> appliances 
+                        (Directly synchronised with <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400">XYZ_Stock_Inventory.xlsx</span>)
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px]">Last synced: <span id="lastSyncedTime" class="font-medium text-slate-700 dark:text-slate-300">Just now</span></span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. MODALS AND DRAWERS                      -->
+    <!-- ========================================== -->
+
+    <!-- 3.1 EDIT APPLIANCE MODAL -->
+    <div id="editModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Edit Appliance & Stock</h3>
+                        <p class="text-xs text-slate-500">Changes are committed immediately to the Excel sheet.</p>
+                    </div>
+                </div>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="editForm" onsubmit="handleEditSubmit(event)" class="mt-4 space-y-4">
+                <input type="hidden" id="editSku">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Product Title</label>
+                        <input type="text" id="editName" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Category</label>
+                        <select id="editCategory" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="Televisions">Televisions</option>
+                            <option value="Refrigerators">Refrigerators</option>
+                            <option value="Washing Machines">Washing Machines</option>
+                            <option value="Air Conditioners">Air Conditioners</option>
+                            <option value="Kitchen Appliances">Kitchen Appliances</option>
+                            <option value="Home Cleaning">Home Cleaning</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Brand</label>
+                        <input type="text" id="editBrand" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Model Number</label>
+                        <input type="text" id="editModel"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Warehouse Location</label>
+                        <input type="text" id="editLocation" placeholder="e.g. Bay A-10"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Stock Quantity (Units)</label>
+                        <input type="number" id="editStockQty" min="0" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Min Threshold (Reorder Alert)</label>
+                        <input type="number" id="editMinThresh" min="0" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cost Price (₹)</label>
+                        <input type="number" id="editCostPrice" step="0.01" min="0" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Selling Price (₹)</label>
+                        <input type="number" id="editSellingPrice" step="0.01" min="0" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Energy Rating</label>
+                        <select id="editEnergy"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="5 Star">5 Star</option>
+                            <option value="4 Star">4 Star</option>
+                            <option value="3 Star">3 Star</option>
+                            <option value="2 Star">2 Star</option>
+                            <option value="1 Star">1 Star</option>
+                            <option value="N/A">N/A</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Primary Supplier</label>
+                        <input type="text" id="editSupplier"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Cancel
+                    </button>
+                    <button type="submit" id="editSaveBtn" class="px-5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Save to Excel File</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3.2 ADD NEW APPLIANCE MODAL -->
+    <div id="addModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Add New Appliance to Stock</h3>
+                        <p class="text-xs text-slate-500">Creates a new SKU and appends directly to the Excel spreadsheet.</p>
+                    </div>
+                </div>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addForm" onsubmit="handleAddSubmit(event)" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">SKU Code (Unique ID)</label>
+                        <input type="text" id="addSku" required placeholder="e.g. XYZ-TV-004"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-mono uppercase focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Category</label>
+                        <select id="addCategory" required onchange="suggestNextSku()"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="Televisions">Televisions</option>
+                            <option value="Refrigerators">Refrigerators</option>
+                            <option value="Washing Machines">Washing Machines</option>
+                            <option value="Air Conditioners">Air Conditioners</option>
+                            <option value="Kitchen Appliances">Kitchen Appliances</option>
+                            <option value="Home Cleaning">Home Cleaning</option>
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Appliance Name / Description</label>
+                        <input type="text" id="addName" required placeholder="e.g. LG 55-Inch OLED 4K Cinema Series TV"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Brand</label>
+                        <input type="text" id="addBrand" required placeholder="e.g. Sony, LG, Samsung..."
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Model Number</label>
+                        <input type="text" id="addModel" placeholder="e.g. OLED55C4"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Initial Stock Units</label>
+                        <input type="number" id="addStockQty" min="0" value="10" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-emerald-600 focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Reorder Minimum Threshold</label>
+                        <input type="number" id="addMinThresh" min="0" value="5" required
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cost Price (₹)</label>
+                        <input type="number" id="addCostPrice" step="0.01" min="0" required placeholder="Cost to business"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Selling Retail Price (₹)</label>
+                        <input type="number" id="addSellingPrice" step="0.01" min="0" required placeholder="Customer selling price"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Warehouse Location</label>
+                        <input type="text" id="addLocation" value="Bay A-05"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Energy Rating</label>
+                        <select id="addEnergy"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                            <option value="5 Star">5 Star</option>
+                            <option value="4 Star">4 Star</option>
+                            <option value="3 Star">3 Star</option>
+                            <option value="N/A">N/A</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Supplier</label>
+                        <input type="text" id="addSupplier" value="Apex Electronics Distro"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Warranty Term</label>
+                        <input type="text" id="addWarranty" value="2 Years"
+                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Cancel
+                    </button>
+                    <button type="submit" id="addSaveBtn" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add & Save to Excel</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3.3 BARCODE / WAREHOUSE LABEL MODAL -->
+    <div id="barcodeModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-center">
+            <div class="flex justify-end">
+                <button onclick="closeBarcodeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950 inline-block w-full">
+                <div class="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1">XYZ APPLIANCES WAREHOUSE LABEL</div>
+                <div id="barcodeSku" class="text-xl font-mono font-extrabold text-slate-900 dark:text-white mb-2">XYZ-TV-001</div>
+                
+                <!-- Synthetic SVG Barcode visual -->
+                <div class="my-4 flex items-center justify-center h-16 bg-white p-2 rounded-lg border border-slate-200 shadow-inner">
+                    <div id="svgBarcode" class="flex items-center justify-center gap-[3px] h-12 w-full px-2"></div>
+                </div>
+
+                <div id="barcodeProdName" class="text-xs font-semibold text-slate-700 dark:text-slate-300 line-clamp-2 mb-2">Sony Bravia 65-Inch 4K TV</div>
+                
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div>Bay: <strong id="barcodeLocation" class="text-slate-800 dark:text-slate-200">Bay A-10</strong></div>
+                    <div>Price: <strong id="barcodePrice" class="text-emerald-600">₹74,990</strong></div>
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-center gap-2">
+                <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Bin Tag
+                </button>
+                <button onclick="closeBarcodeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3.4 REORDER / PURCHASE ORDER ASSISTANT MODAL -->
+    <div id="reorderModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full p-6 shadow-2xl relative">
+            
+            <!-- Print-Only Official Purchase Requisition Header -->
+            <div class="hidden print-only mb-4 border-b-2 border-slate-900 pb-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-black tracking-tight text-slate-900 uppercase">XYZ Electronic Appliances Pvt. Ltd.</h2>
+                        <p class="text-[10px] text-slate-600 uppercase tracking-widest font-bold">Official Stock Replenishment & Purchase Requisition</p>
+                    </div>
+                    <div class="text-right text-[10px] text-slate-700">
+                        <div>Generated Date: <strong id="printPoDate" class="text-slate-900">20-Nov-2026</strong></div>
+                        <div>Generated By: <strong id="printPoUser" class="text-slate-900">Admin1</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 reorder-modal-close">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Smart Purchase Order Reorder Advisor</h3>
+                        <p class="text-xs text-slate-500">Automatically computes replenishment orders for low-stock and zero-stock items.</p>
+                    </div>
+                </div>
+                <button onclick="closeReorderModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="mt-4">
+                <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-between text-xs mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-amber-600"></i>
+                        <span>Total Items Needing Restock: <strong id="reorderItemCount" class="text-amber-700 dark:text-amber-300">0</strong></span>
+                    </div>
+                    <div>
+                        Estimated PO Cost: <strong id="reorderTotalCost" class="text-base font-bold text-emerald-600">₹0</strong>
+                    </div>
+                </div>
+
+                <div class="max-h-96 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0">
+                            <tr>
+                                <th class="py-2.5 px-3">SKU</th>
+                                <th class="py-2.5 px-3">Appliance</th>
+                                <th class="py-2.5 px-3 text-center">Stock / Min</th>
+                                <th class="py-2.5 px-3 text-center">Suggested PO Qty</th>
+                                <th class="py-2.5 px-3">Supplier</th>
+                                <th class="py-2.5 px-3 text-right">Unit Cost</th>
+                                <th class="py-2.5 px-3 text-right">PO Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reorderTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Print-Only Approval Signature Footer -->
+            <div class="hidden print-only mt-8 pt-4 border-t border-slate-300">
+                <div class="flex justify-between items-end text-[10px] text-slate-600">
+                    <div>
+                        <div>Prepared By: ___________________</div>
+                        <div class="mt-1">Inventory Operations Desk</div>
+                    </div>
+                    <div>
+                        <div>Store Manager Approval: ___________________</div>
+                        <div class="mt-1">Date: ____ / ____ / 2026</div>
+                    </div>
+                    <div>
+                        <div>Authorized Signature: ___________________</div>
+                        <div class="mt-1">Official Company Seal</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between reorder-modal-actions no-print">
+                <span class="text-[11px] text-slate-400">Order buffer calculated at 2x threshold safety stock.</span>
+                <div class="flex gap-2">
+                    <button onclick="printReorderSheet()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 hover:bg-slate-200 transition">
+                        <i class="fa-solid fa-print"></i> Print Reorder Sheet
+                    </button>
+                    <button onclick="closeReorderModal()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3.5 UPLOAD EXCEL MODAL -->
+    <div id="uploadModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Upload Stock Spreadsheet</h3>
+                        <p class="text-xs text-slate-500">Sync from your external Microsoft Excel file (.xlsx).</p>
+                    </div>
+                </div>
+                <button onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="uploadForm" onsubmit="handleExcelUpload(event)" class="mt-4 space-y-4">
+                <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-blue-500 transition cursor-pointer"
+                     onclick="document.getElementById('excelFileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Click to choose or drag & drop</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Supports .xlsx or .xlsm spreadsheets</p>
+                    <input type="file" id="excelFileInput" accept=".xlsx,.xlsm" class="hidden" onchange="updateFileNamePreview(this)">
+                    <div id="fileSelectedName" class="mt-3 text-xs font-bold text-blue-600 hidden"></div>
+                </div>
+
+                <div class="text-[11px] text-slate-400 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
+                    <i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Automatic safety backup will be created in <code class="font-mono text-[10px]">data/backups/</code> before replacing.
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeUploadModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Cancel
+                    </button>
+                    <button type="submit" id="uploadSubmitBtn" class="px-5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Upload & Import</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3.6 AUDIT TRAIL / ACTIVITY LOG DRAWER -->
+    <div id="auditDrawer" class="hidden fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-blue-600"></i>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Live Activity & Audit Trail</h3>
+            </div>
+            <button onclick="toggleAuditDrawer()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="auditList">
+            <!-- Injected via JS -->
+        </div>
+
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center">
+            Every inventory adjustment is permanently recorded with user identity.
+        </div>
+    </div>
+
+    <!-- Application Javascript Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
